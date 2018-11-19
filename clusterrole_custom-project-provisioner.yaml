@@ -1,0 +1,22 @@
+apiVersion: authorization.openshift.io/v1
+kind: ClusterRole
+metadata:
+  name: custom-project-provisioner
+rules:
+- apiGroups:
+  - 'project.openshift.io'
+  attributeRestrictions: null
+  resources:
+  - 'projectrequests'
+  verbs:
+  - 'get'
+  - 'create'
+- apiGroups: null
+  attributeRestrictions: null
+  nonResourceURLs:
+  - '*'
+  resources:
+  - 'limitranges'
+  - 'resourcequotas'
+  verbs:
+  - 'create'
