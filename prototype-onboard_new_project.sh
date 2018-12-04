@@ -53,6 +53,22 @@ function ocp_curl_get()
 	https://$ENDPOINT"${apipath}"
 }
 
+# PATCH an object
+function ocp_curl_patch()
+{
+	object="$1"
+	apipath="$2"
+
+	echo "${object}" |
+	curl -k \
+	-X PATCH \
+	-d @- \
+	-H "Authorization: Bearer $TOKEN" \
+	-H 'Accept: application/json' \
+	-H 'Content-Type: application/strategic-merge-patch+json' \
+	https://$ENDPOINT"${apipath}"
+}
+
 # return the HTTP status from trying to get the resource
 function ocp_curl_get_status()
 {
@@ -92,6 +108,74 @@ cat > ${obj} <<EOF
 }
 EOF
 ocp_curl_put "$(cat ${obj})" /apis/project.openshift.io/v1/projectrequests
+rm -f ${obj}
+
+# apply an annotation to the project
+# (ultimately, we want to record metadata in annotations--
+# things like "which ServiceNow catalog entry was used to create this?"
+# or "which team owns this project?".)
+obj=$(mktemp)
+cat > ${obj} <<"EOF"
+{"metadata": {"annotations": {"dfs-servicenow-catalog-selection": "xxx-demo-catalog-selection"}}}
+EOF
+ocp_curl_patch "$(cat ${obj})" /api/v1/namespaces/${PROJECT_NAME}
+rm -f ${obj}
+
+# bind the "admin" and "edit" roles to the groups ${PROJECT_NAME}-admin
+# and ${PROJECT_NAME}-edit, respectively.  Assume that these groups will
+# be created at some point in the future.
+obj=$(mktemp)
+cat > ${obj} <<EOF
+{
+    "apiVersion": "authorization.openshift.io/v1",
+    "groupNames": [
+        "${PROJECT_NAME}-edit"
+    ],
+    "kind": "RoleBinding",
+    "metadata": {
+        "name": "${PROJECT_NAME}-edit",
+        "namespace": "${PROJECT_NAME}"
+    },
+    "roleRef": {
+        "name": "edit"
+    },
+    "subjects": [
+        {
+            "kind": "Group",
+            "name": "${PROJECT_NAME}-edit"
+        }
+    ],
+    "userNames": null
+}
+EOF
+ocp_curl_put "$(cat ${obj})" /apis/authorization.openshift.io/v1/namespaces/${PROJECT_NAME}/rolebindings
+rm -f ${obj}
+
+obj=$(mktemp)
+cat > ${obj} <<EOF
+{
+    "apiVersion": "authorization.openshift.io/v1",
+    "groupNames": [
+        "${PROJECT_NAME}-admin"
+    ],
+    "kind": "RoleBinding",
+    "metadata": {
+        "name": "${PROJECT_NAME}-admin",
+        "namespace": "${PROJECT_NAME}"
+    },
+    "roleRef": {
+        "name": "admin"
+    },
+    "subjects": [
+        {
+            "kind": "Group",
+            "name": "${PROJECT_NAME}-admin"
+        }
+    ],
+    "userNames": null
+}
+EOF
+ocp_curl_put "$(cat ${obj})" /apis/authorization.openshift.io/v1/namespaces/${PROJECT_NAME}/rolebindings
 rm -f ${obj}
 
 # create the small limitrange inside the project
