@@ -246,24 +246,6 @@ cat > ${obj} <<EOF
             "requests.memory": "32Gi",
             "requests.storage": "50Gi"
         }
-    },
-    "status": {
-        "hard": {
-            "limits.cpu": "10",
-            "limits.memory": "64Gi",
-            "pods": "150",
-            "requests.cpu": "10",
-            "requests.memory": "32Gi",
-            "requests.storage": "50Gi"
-        },
-        "used": {
-            "limits.cpu": "0",
-            "limits.memory": "0",
-            "pods": "0",
-            "requests.cpu": "0",
-            "requests.memory": "0",
-            "requests.storage": "0"
-        }
     }
 }
 EOF
