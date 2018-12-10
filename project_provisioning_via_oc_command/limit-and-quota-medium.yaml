@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Template
+labels:
+  limit-and-quota-tier: medium
+metadata:
+  creationTimestamp: null
+  name: project-request
+objects:
+- apiVersion: v1
+  kind: LimitRange
+  metadata:
+    labels:
+      quota-tier: medium
+    name: limitrange-medium
+  spec:
+    limits:
+    - default:
+        cpu: 400m
+        memory: 4Gi
+      defaultRequest:
+        cpu: 100m
+        memory: 512Mi
+      max:
+        cpu: 2000m
+        memory: 12Gi
+      min:
+        cpu: 50m
+        memory: 16Mi
+      type: Container
+      maxLimitRequestRatio:
+        cpu: "40"
+        memory: "768"
+- apiVersion: v1
+  kind: ResourceQuota
+  metadata:
+    labels:
+      quota-tier: medium
+    name: quota-medium
+  spec:
+    hard:
+      limits.cpu: "25"
+      limits.memory: 128Gi
+      pods: "300"
+      requests.cpu: "25"
+      requests.memory: 64Gi
+      requests.storage: 100Gi
